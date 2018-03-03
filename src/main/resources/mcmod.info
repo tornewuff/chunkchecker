@@ -1,14 +1,14 @@
 [
 {
-  "modid": "examplemod",
-  "name": "Example Mod",
-  "description": "Example placeholder mod.",
+  "modid": "chunkchecker",
+  "name": "Chunk Checker",
+  "description": "Looks for chunks being loaded repeatedly and unexpectedly on a server.",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
-  "updateUrl": "",
-  "authorList": ["ExampleDude"],
-  "credits": "The Forge and FML guys, for making this example",
+  "updateJSON": "",
+  "authorList": ["Torne"],
+  "credits": "",
   "logoFile": "",
   "screenshots": [],
   "dependencies": []
