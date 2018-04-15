@@ -10,6 +10,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.Logger;
+import uk.org.wolfpuppy.minecraft.chunkchecker.util.DimChunkPos;
 import uk.org.wolfpuppy.minecraft.chunkchecker.util.LimitedMap;
 
 import java.io.PrintWriter;
@@ -29,10 +30,10 @@ public class ChunkChecker {
     private static boolean serverStarted = false;
 
     static class ChunkLoadInfo {
-        private ChunkPos pos;
+        private DimChunkPos pos;
         private List<Throwable> loadTraces = new ArrayList<>(RELOAD_COUNT);
 
-        public ChunkLoadInfo(ChunkPos pos) {
+        public ChunkLoadInfo(DimChunkPos pos) {
             this.pos = pos;
         }
 
@@ -55,9 +56,9 @@ public class ChunkChecker {
         }
     }
 
-    private static Map<ChunkPos, ChunkLoadInfo> loadedChunks = new HashMap<>();
-    private static Map<ChunkPos, ChunkLoadInfo> unloadedChunks = new LimitedMap<>(UNLOADED_CHUNK_CACHE);
-    private static Set<ChunkPos> ignoredChunks = new HashSet<>();
+    private static Map<DimChunkPos, ChunkLoadInfo> loadedChunks = new HashMap<>();
+    private static Map<DimChunkPos, ChunkLoadInfo> unloadedChunks = new LimitedMap<>(UNLOADED_CHUNK_CACHE);
+    private static Set<DimChunkPos> ignoredChunks = new HashSet<>();
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -75,7 +76,9 @@ public class ChunkChecker {
     @SubscribeEvent
     public static void chunkLoaded(ChunkEvent.Load event) {
         Chunk chunk = event.getChunk();
-        ChunkPos pos = chunk.getPos();
+        WorldServer world = (WorldServer) chunk.getWorld();
+        int dim = world.provider.getDimension();
+        DimChunkPos pos = new DimChunkPos(dim, chunk.getPos());
 
         if (!serverStarted || chunk.getWorld().isSpawnChunk(pos.x, pos.z) || ignoredChunks.contains(pos)) {
             // spawn chunks don't unload, so loading them is boring. ignored chunks are.. ignored.
@@ -84,7 +87,6 @@ public class ChunkChecker {
 
         ChunkLoadInfo loadInfo = unloadedChunks.remove(pos);
 
-        WorldServer world = (WorldServer) chunk.getWorld();
         if (world.getPlayerChunkMap().contains(pos.x, pos.z)) {
             // chunk loading because of player presence, so this is okay, but we need to keep the chunk record
             // if it already existed, since it may have previously been loaded by a non-player event.
@@ -111,7 +113,9 @@ public class ChunkChecker {
     @SubscribeEvent
     public static void chunkUnloaded(ChunkEvent.Unload event) {
         Chunk chunk = event.getChunk();
-        ChunkPos pos = chunk.getPos();
+        WorldServer world = (WorldServer) chunk.getWorld();
+        int dim = world.provider.getDimension();
+        DimChunkPos pos = new DimChunkPos(dim, chunk.getPos());
 
         // just move the record back to the unloaded cache if it exists.
         ChunkLoadInfo loadInfo = loadedChunks.remove(pos);
